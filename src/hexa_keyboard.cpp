@@ -6,108 +6,24 @@
 #include "dynamixel_control/GetIDs.h"
 #include "dynamixel_control/SetActuatorsPositions.h"
 
-#include "phidget21.h"
+#include "std_msgs/String.h"
 
 struct termios oldt, newt;
-CPhidgetTextLCDHandle lcd_handle;
-
-int CCONV AttachHandler(CPhidgetHandle TXT, void *userptr)
-{
-    int serialNo;
-    const char *name;
-
-    CPhidget_getDeviceName (TXT, &name);
-    CPhidget_getSerialNumber(TXT, &serialNo);
-    ROS_INFO("%s %10d attached!\n", name, serialNo);
-
-    return 0;
-}
-
-int CCONV DetachHandler(CPhidgetHandle TXT, void *userptr)
-{
-    int serialNo;
-    const char *name;
-
-    CPhidget_getDeviceName (TXT, &name);
-    CPhidget_getSerialNumber(TXT, &serialNo);
-    ROS_INFO("%s %10d detached!\n", name, serialNo);
-
-    return 0;
-}
-
-int CCONV ErrorHandler(CPhidgetHandle TXT, void *userptr, int ErrorCode, const char *Description)
-{
-    ROS_INFO("Error handled. %d - %s\n", ErrorCode, Description);
-    return 0;
-}
-
-//Display the properties of the attached phidget to the screen.  We will be displaying the name, serial number and version of the attached device.
-int display_properties(CPhidgetTextLCDHandle phid)
-{
-    int serialNo, version, numRows, numColumns, backlight, cursor, contrast, cursor_blink, numScreens;
-    const char* ptr;
-    CPhidget_DeviceID id;
-
-    CPhidget_getDeviceType((CPhidgetHandle)phid, &ptr);
-    CPhidget_getSerialNumber((CPhidgetHandle)phid, &serialNo);
-    CPhidget_getDeviceVersion((CPhidgetHandle)phid, &version);
-    CPhidget_getDeviceID((CPhidgetHandle)phid, &id);
-
-    CPhidgetTextLCD_getRowCount (phid, &numRows);
-    CPhidgetTextLCD_getColumnCount (phid, &numColumns);
-    CPhidgetTextLCD_getBacklight (phid, &backlight);
-    CPhidgetTextLCD_getContrast (phid, &contrast);
-    CPhidgetTextLCD_getCursorOn (phid, &cursor);
-    CPhidgetTextLCD_getCursorBlink (phid, &cursor_blink);
-
-    ROS_INFO("%s\n", ptr);
-    ROS_INFO("Serial Number: %10d\nVersion: %8d\n", serialNo, version);
-    if(id == PHIDID_TEXTLCD_ADAPTER){
-        CPhidgetTextLCD_getScreenCount (phid, &numScreens);
-        ROS_INFO("# Screens: %d\n", numScreens);
-        CPhidgetTextLCD_setScreen(phid, 0);
-        CPhidgetTextLCD_setScreenSize(phid, PHIDGET_TEXTLCD_SCREEN_2x16);
-        CPhidgetTextLCD_initialize(phid);
-    }
-
-    ROS_INFO("# Rows: %d\n# Columns: %d\n", numRows, numColumns);
-    ROS_INFO("Current Contrast Level: %d\nBacklight Status: %d\n", contrast, backlight);
-    ROS_INFO("Cursor Status: %d\nCursor Blink Status: %d\n", cursor, cursor_blink);
-
-    return 0;
-}
 
 void quit(int sig)
 {
     tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
     ros::shutdown();
 
-    CPhidget_close((CPhidgetHandle)lcd_handle);
-    CPhidget_delete((CPhidgetHandle)lcd_handle);
-
     exit(0);
 }
 
 int main(int argc, char **argv)
 {
-    int result;
-    const char* err;
-    CPhidgetTextLCD_create(&lcd_handle);
-    CPhidget_set_OnAttach_Handler((CPhidgetHandle)lcd_handle, AttachHandler, NULL);
-    CPhidget_set_OnDetach_Handler((CPhidgetHandle)lcd_handle, DetachHandler, NULL);
-    CPhidget_set_OnError_Handler((CPhidgetHandle)lcd_handle, ErrorHandler, NULL);
-    CPhidget_open((CPhidgetHandle)lcd_handle,-1);
-    if((result = CPhidget_waitForAttachment((CPhidgetHandle)lcd_handle, 10000)))
-    {
-        CPhidget_getErrorDescription(result, &err);
-        ROS_ERROR("Problem waiting for attachment: %s\n", err);
-        return 0;
-    }
-    display_properties(lcd_handle);
-    CPhidgetTextLCD_setContrast (lcd_handle, 255);
-
     ros::init(argc, argv, "hexa_keyboard");
     ros::NodeHandle nh;
+
+    ros::Publisher output_msg_pub = nh.advertise<std_msgs::String>("output_msg", 1000);
 
     tcgetattr( STDIN_FILENO, &oldt);           // save old settings
     newt = oldt;
@@ -168,12 +84,13 @@ int main(int argc, char **argv)
         }
 
         // debattement max = 1450 pour moteur 2x
+        std_msgs::String msg;
+        msg.data = "";
         switch(c)
         {
         case 65:
             ROS_INFO("up");
-            if(!CPhidgetTextLCD_setDisplayString(lcd_handle, 0, "UP     "))
-                ROS_ERROR("Failed to display text");
+            msg.data = "UP";
             for(int i = 0; i < controlled_ids.size(); i++)
             {
                 if(controlled_ids[i] >= 10 & controlled_ids[i] < 20)
@@ -193,8 +110,7 @@ int main(int argc, char **argv)
             break;
         case 66:
             ROS_INFO("down");
-            if(!CPhidgetTextLCD_setDisplayString(lcd_handle, 0, "DOWN   "))
-                ROS_ERROR("Failed to display text");
+            msg.data = "DOWN";
             for(int i = 0; i < controlled_ids.size(); i++)
             {
                 if(controlled_ids[i] >= 10 & controlled_ids[i] < 20)
@@ -221,6 +137,7 @@ int main(int argc, char **argv)
             new_value = true;
             break;
         }
+        output_msg_pub.publish(msg);
 
         if(new_value)
         {

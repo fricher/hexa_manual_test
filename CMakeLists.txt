@@ -19,8 +19,7 @@ catkin_package(
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  ~/libphidget-2.1.8.20140319
 )
 
 add_executable(hexa_keyboard src/hexa_keyboard.cpp)
-target_link_libraries(hexa_keyboard ${catkin_LIBRARIES} phidget21)
+target_link_libraries(hexa_keyboard ${catkin_LIBRARIES})
