@@ -8,6 +8,9 @@
 
 #include "phidget21.h"
 
+struct termios oldt, newt;
+CPhidgetTextLCDHandle lcd_handle;
+
 int CCONV AttachHandler(CPhidgetHandle TXT, void *userptr)
 {
     int serialNo;
@@ -74,10 +77,6 @@ int display_properties(CPhidgetTextLCDHandle phid)
     return 0;
 }
 
-struct termios oldt, newt;
-
-CPhidgetTextLCDHandle lcd_handle;
-
 void quit(int sig)
 {
     tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
@@ -92,16 +91,16 @@ void quit(int sig)
 int main(int argc, char **argv)
 {
     int result;
+    const char* err;
     CPhidgetTextLCD_create(&lcd_handle);
     CPhidget_set_OnAttach_Handler((CPhidgetHandle)lcd_handle, AttachHandler, NULL);
     CPhidget_set_OnDetach_Handler((CPhidgetHandle)lcd_handle, DetachHandler, NULL);
     CPhidget_set_OnError_Handler((CPhidgetHandle)lcd_handle, ErrorHandler, NULL);
     CPhidget_open((CPhidgetHandle)lcd_handle,-1);
-    const char* err;
     if((result = CPhidget_waitForAttachment((CPhidgetHandle)lcd_handle, 10000)))
     {
         CPhidget_getErrorDescription(result, &err);
-        ROS_ERROR("Problem waiting for attachment: %s\n", &err);
+        ROS_ERROR("Problem waiting for attachment: %s\n", err);
         return 0;
     }
     display_properties(lcd_handle);
