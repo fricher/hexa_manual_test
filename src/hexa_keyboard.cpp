@@ -21,8 +21,14 @@ void quit(int sig)
 
 int main(int argc, char **argv)
 {
-    if(!CPhidgetTextLCD_create(&lcd_handle))
-        ROS_ERROR("Failed to init LCD");
+    ROS_INFO("LCD Create : %d",CPhidgetTextLCD_create(&lcd_handle));
+    CPhidget_open((CPhidgetHandle)lcd_handle,-1);
+    CPhidgetTextLCD_setScreenSize(lcd_handle,PHIDGET_TEXTLCD_SCREEN_2x20);
+    int backlight = 0;
+    CPhidgetTextLCD_getBacklight(lcd_handle,&backlight);    
+    ROS_INFO("Backlight : %d",backlight);
+    CPhidgetTextLCD_setBacklight(lcd_handle,255);
+    CPhidgetTextLCD_initialize(lcd_handle);
 
     ros::init(argc, argv, "hexa_keyboard");
     ros::NodeHandle nh;
@@ -58,11 +64,11 @@ int main(int argc, char **argv)
 
     for(int i = 0; i < ids.size(); i++)
     {
-        if(ids[i] < 10)
-        {
+        if(ids[i] < 10);
+       /* {
             controlled_ids.push_back(ids[i]);
             target_positions.push_back(0);
-        }
+        }*/
         else if(ids[i] < 30)
         {
             controlled_ids.push_back(ids[i]);
