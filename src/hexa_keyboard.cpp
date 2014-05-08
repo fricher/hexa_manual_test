@@ -83,8 +83,8 @@ void quit(int sig)
     tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
     ros::shutdown();
 
-    CPhidget_close((CPhidgetHandle)txt_lcd);
-    CPhidget_delete((CPhidgetHandle)txt_lcd);
+    CPhidget_close((CPhidgetHandle)lcd_handle);
+    CPhidget_delete((CPhidgetHandle)lcd_handle);
 
     exit(0);
 }
@@ -93,18 +93,19 @@ int main(int argc, char **argv)
 {
     int result;
     CPhidgetTextLCD_create(&lcd_handle);
-    CPhidget_set_OnAttach_Handler((CPhidgetHandle)txt_lcd, AttachHandler, NULL);
-    CPhidget_set_OnDetach_Handler((CPhidgetHandle)txt_lcd, DetachHandler, NULL);
-    CPhidget_set_OnError_Handler((CPhidgetHandle)txt_lcd, ErrorHandler, NULL);
+    CPhidget_set_OnAttach_Handler((CPhidgetHandle)lcd_handle, AttachHandler, NULL);
+    CPhidget_set_OnDetach_Handler((CPhidgetHandle)lcd_handle, DetachHandler, NULL);
+    CPhidget_set_OnError_Handler((CPhidgetHandle)lcd_handle, ErrorHandler, NULL);
     CPhidget_open((CPhidgetHandle)lcd_handle,-1);
-    if((result = CPhidget_waitForAttachment((CPhidgetHandle)txt_lcd, 10000)))
+    const char* err;
+    if((result = CPhidget_waitForAttachment((CPhidgetHandle)lcd_handle, 10000)))
     {
         CPhidget_getErrorDescription(result, &err);
-        ROS_ERROR("Problem waiting for attachment: %s\n", err);
+        ROS_ERROR("Problem waiting for attachment: %s\n", &err);
         return 0;
     }
-    display_properties(txt_lcd);
-    CPhidgetTextLCD_setContrast (txt_lcd, 255);
+    display_properties(lcd_handle);
+    CPhidgetTextLCD_setContrast (lcd_handle, 255);
 
     ros::init(argc, argv, "hexa_keyboard");
     ros::NodeHandle nh;
