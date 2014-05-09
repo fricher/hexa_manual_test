@@ -1,0 +1,12 @@
+<launch>
+
+  <include file="$(find dynamixel_control)/launch/dynamixel_control.launch" />
+
+  <node pkg="phidget_textlcd" type="phidget_textlcd" name="phidget_textlcd" output="screen">
+  </node>
+
+  <node pkg="hexa_manual_test" type="hexa_keyboard" name="hexa_keyboard" output="screen">
+  <remap from="output_msg" to="phidget_textlcd_msg" />
+  </node>
+  </launch>
+
