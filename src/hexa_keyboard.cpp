@@ -93,18 +93,19 @@ int main(int argc, char **argv)
             msg.data = "UP";
             for(int i = 0; i < controlled_ids.size(); i++)
             {
-                if(controlled_ids[i] >= 10 & controlled_ids[i] < 20)
-                {
-                    target_positions[i]-=100;
-                    if(target_positions[i] < 500)
-                        target_positions[i] = 500;
-                }
-                else if(controlled_ids[i] >= 20 & controlled_ids[i] < 30)
-                {
-                    target_positions[i]+=100;
-                    if(target_positions[i] > 3500)
-                        target_positions[i] = 3500;
-                }
+                if(controlled_ids[i] >= 10 & controlled_ids[i] < 14)
+                    target_positions[i] -= 100;
+                else if(controlled_ids[i] < 20)
+                    target_positions[i] += 100;
+                else if(controlled_ids[i] >= 20 & controlled_ids[i] < 24)
+                    target_positions[i] += 100;
+                else if(controlled_ids[i] < 30)
+                    target_positions[i] -= 100;
+
+                if(target_positions[i] < 500)
+                    target_positions[i] = 500;
+                else if(target_positions[i] > 3500)
+                    target_positions[i] = 3500;
             }
             new_value = true;
             break;
@@ -113,18 +114,19 @@ int main(int argc, char **argv)
             msg.data = "DOWN";
             for(int i = 0; i < controlled_ids.size(); i++)
             {
-                if(controlled_ids[i] >= 10 & controlled_ids[i] < 20)
-                {
-                    target_positions[i]+=100;
-                    if(target_positions[i] > 3500)
-                        target_positions[i] = 3500;
-                }
-                else if(controlled_ids[i] >= 20 & controlled_ids[i] < 30)
-                {
-                    target_positions[i]-=100;
-                    if(target_positions[i] < 500)
-                        target_positions[i] = 500;
-                }
+                if(controlled_ids[i] >= 10 & controlled_ids[i] < 14)
+                    target_positions[i] += 100;
+                else if(controlled_ids[i] < 20)
+                    target_positions[i] -= 100;
+                else if(controlled_ids[i] >= 20 & controlled_ids[i] < 24)
+                    target_positions[i] -= 100;
+                else if(controlled_ids[i] < 30)
+                    target_positions[i] += 100;
+
+                if(target_positions[i] < 500)
+                    target_positions[i] = 500;
+                else if(target_positions[i] > 3500)
+                    target_positions[i] = 3500;
             }
             new_value = true;
             break;
