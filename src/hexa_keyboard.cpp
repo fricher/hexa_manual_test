@@ -56,11 +56,11 @@ int main(int argc, char **argv)
 
     for(int i = 0; i < ids.size(); i++)
     {
-        if(ids[i] < 10);
-       /* {
+        if(ids[i] < 10)
+        {
             controlled_ids.push_back(ids[i]);
-            target_positions.push_back(0);
-        }*/
+            target_positions.push_back(2048);
+        }
         else if(ids[i] < 30)
         {
             controlled_ids.push_back(ids[i]);
@@ -75,17 +75,31 @@ int main(int argc, char **argv)
 
     char c;
     bool new_value = true;
+
+    std_msgs::String msg;
+    msg.data = "";
+
     while (ros::ok())
     {
+        if(new_value)
+        {
+            setpos_srv.request.ids = controlled_ids;
+            setpos_srv.request.positions = target_positions;
+            if(!setpos_client.call(setpos_srv))
+            {
+                ROS_ERROR("Failed to call service dynamixel_control/getids");
+                return 1;
+            }
+            output_msg_pub.publish(msg);
+            new_value = false;
+        }
+
         if(read(STDIN_FILENO, &c, 1) < 0)
         {
             perror("read():");
             exit(-1);
         }
 
-        // debattement max = 1450 pour moteur 2x
-        std_msgs::String msg;
-        msg.data = "";
         switch(c)
         {
         case 65:
@@ -136,19 +150,6 @@ int main(int argc, char **argv)
             ROS_INFO("left");
             new_value = true;
             break;
-        }
-        output_msg_pub.publish(msg);
-
-        if(new_value)
-        {
-            setpos_srv.request.ids = controlled_ids;
-            setpos_srv.request.positions = target_positions;
-            if(!setpos_client.call(setpos_srv))
-            {
-                ROS_ERROR("Failed to call service dynamixel_control/getids");
-                return 1;
-            }
-            new_value = false;
         }
 
         ros::spinOnce();
