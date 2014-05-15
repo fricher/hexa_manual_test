@@ -2,9 +2,11 @@
 
 #include <termios.h>
 #include <signal.h>
+#include <sstream>
 
 #include "dynamixel_control/GetIDs.h"
 #include "dynamixel_control/SetActuatorsPositions.h"
+#include "dynamixel_control/GetActuatorsLoads.h"
 
 #include "std_msgs/String.h"
 
@@ -72,25 +74,50 @@ int main(int argc, char **argv)
             target_positions.push_back(512);
         }
     }
+    setpos_srv.request.ids = controlled_ids;
 
     char c;
     bool new_value = true;
 
     std_msgs::String msg;
-    msg.data = "";
+    std::stringstream msg_ss;
+
+    ros::ServiceClient getloads_client = nh.serviceClient<dynamixel_control::GetActuatorsLoads>("/dynamixel_control/getloads");
+    dynamixel_control::GetActuatorsLoads getloads_srv;
+    std::vector<unsigned char> loads_ids;
+    loads_ids.push_back(11);
+    loads_ids.push_back(12);
+    loads_ids.push_back(13);
+    loads_ids.push_back(14);
+    loads_ids.push_back(15);
+    loads_ids.push_back(16);
+    getloads_srv.request.ids = loads_ids;
 
     while (ros::ok())
     {
+        if(!getloads_client.call(getloads_srv))
+        {
+            ROS_ERROR("Failed to call service dynamixel_control/getids");
+            return 1;
+        }
+
+        msg_ss.clear();
+        for(int i = 0; i < 3; i++)
+            msg_ss << (int)(100*getloads_srv.response.loads[i]/1023.0) << "% ";
+        msg.data.resize(20);
+        for(int i = 3; i < 6; i++)
+            msg_ss << (int)(100*getloads_srv.response.loads[i]/1023.0) << "% ";
+        msg.data = msg_ss.str();
+        output_msg_pub.publish(msg);
+
         if(new_value)
         {
-            setpos_srv.request.ids = controlled_ids;
             setpos_srv.request.positions = target_positions;
             if(!setpos_client.call(setpos_srv))
             {
                 ROS_ERROR("Failed to call service dynamixel_control/getids");
                 return 1;
             }
-            output_msg_pub.publish(msg);
             new_value = false;
         }
 
@@ -104,7 +131,6 @@ int main(int argc, char **argv)
         {
         case 65:
             ROS_INFO("up");
-            msg.data = "UP";
             for(int i = 0; i < controlled_ids.size(); i++)
             {
                 if(controlled_ids[i] >= 10 & controlled_ids[i] < 14)
@@ -125,7 +151,6 @@ int main(int argc, char **argv)
             break;
         case 66:
             ROS_INFO("down");
-            msg.data = "DOWN";
             for(int i = 0; i < controlled_ids.size(); i++)
             {
                 if(controlled_ids[i] >= 10 & controlled_ids[i] < 14)
@@ -150,7 +175,6 @@ int main(int argc, char **argv)
             break;
         case 68:
             ROS_INFO("left");
-            new_value = true;
             break;
         }
 

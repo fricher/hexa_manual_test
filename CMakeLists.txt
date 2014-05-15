@@ -14,7 +14,7 @@ generate_messages(
 )
 
 catkin_package(
- CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+ CATKIN_DEPENDS roscpp rospy std_msgs message_runtime dynamixel_control
 )
 
 include_directories(
