@@ -101,14 +101,16 @@ int main(int argc, char **argv)
             return 1;
         }
 
-        msg_ss.clear();
+        msg_ss.str("");
         for(int i = 0; i < 3; i++)
             msg_ss << (int)(100*getloads_srv.response.loads[i]/1023.0) << "% ";
-        msg.data.resize(20);
-        for(int i = 3; i < 6; i++)
-            msg_ss << (int)(100*getloads_srv.response.loads[i]/1023.0) << "% ";
         msg.data = msg_ss.str();
-        output_msg_pub.publish(msg);
+	msg.data.resize(20);
+	msg_ss.str("");
+	for(int i = 3; i < 6; i++)
+	    msg_ss << (int)(100*getloads_srv.response.loads[i]/1023.0) << "% ";
+	msg.data += msg_ss.str();
+	output_msg_pub.publish(msg);
 
         if(new_value)
         {
@@ -133,7 +135,8 @@ int main(int argc, char **argv)
             ROS_INFO("up");
             for(int i = 0; i < controlled_ids.size(); i++)
             {
-                if(controlled_ids[i] >= 10 & controlled_ids[i] < 14)
+                if(controlled_ids[i] < 10);
+		else if(controlled_ids[i] >= 10 & controlled_ids[i] < 14)
                     target_positions[i] -= 100;
                 else if(controlled_ids[i] < 20)
                     target_positions[i] += 100;
@@ -153,7 +156,8 @@ int main(int argc, char **argv)
             ROS_INFO("down");
             for(int i = 0; i < controlled_ids.size(); i++)
             {
-                if(controlled_ids[i] >= 10 & controlled_ids[i] < 14)
+                if(controlled_ids[i] < 10);
+		else if(controlled_ids[i] >= 10 & controlled_ids[i] < 14)
                     target_positions[i] += 100;
                 else if(controlled_ids[i] < 20)
                     target_positions[i] -= 100;
@@ -171,7 +175,6 @@ int main(int argc, char **argv)
             break;
         case 67:
             ROS_INFO("right");
-            new_value = true;
             break;
         case 68:
             ROS_INFO("left");
