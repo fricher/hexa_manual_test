@@ -103,12 +103,12 @@ int main(int argc, char **argv)
 
         msg_ss.str("");
         for(int i = 0; i < 3; i++)
-            msg_ss << (int)(100*getloads_srv.response.loads[i]/1023.0) << "% ";
+            msg_ss << (int)(getloads_srv.response.loads[i]) << "% ";
         msg.data = msg_ss.str();
 	msg.data.resize(20);
 	msg_ss.str("");
 	for(int i = 3; i < 6; i++)
-	    msg_ss << (int)(100*getloads_srv.response.loads[i]/1023.0) << "% ";
+        msg_ss << (int)(getloads_srv.response.loads[i]) << "% ";
 	msg.data += msg_ss.str();
 	output_msg_pub.publish(msg);
 
